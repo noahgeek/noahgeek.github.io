@@ -225,7 +225,7 @@ const esp_partition_t *part = esp_partition_find_first(
     ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
 esp_partition_mmap(part, 0, part-&gt;size, ESP_PARTITION_MMAP_DATA, &amp;rom_ptr, &amp;handle);
 // 现在 rom_ptr 像普通指针一样可以读取！</code></pre>
-<p>CPU/PPU 访问 ROM 就像访问内存一样，<strong>DRAM 占用为 0</strong>，可以跑下 1.4MB 以内的任意 ROM。</p>
+<p>CPU/PPU 访问 ROM 就像访问内存一样，<strong>DRAM 占用为 0</strong>，经测试，可以跑337KB以内的任意 ROM。</p>
 
 <h3>2. NimBLE 替代 Bluedroid：省下 80KB RAM</h3>
 <p>ESP32 默认的 Bluedroid 蓝牙协议栈大约占 110KB RAM，对 C3 来说太奢侈了。换成 NimBLE 只占 30KB，把省下的 80KB 留给 NES 模拟器。</p>
