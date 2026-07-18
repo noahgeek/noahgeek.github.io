@@ -43,7 +43,7 @@
   };
 </script>
 
-  <title>🎮 ESP32 小喵掌机 NES 模拟器：SD卡版 + WiFi文件管理 | Noahgeek</title>
+  <title>🎮 ESP32-C3 NES 模拟器：在单片机上看魂斗罗 | Noahgeek</title>
   
 
 
@@ -184,114 +184,96 @@
     
     
     <div class="post-body" itemprop="articleBody">
-<p>把 NES 红白机模拟器移植到 <strong>学而思 ESP32 小喵掌机</strong>，支持 <strong>SD 卡读取 ROM</strong>、<strong>WiFi Web 文件管理</strong>、<strong>菜单式双槽位存档/读档</strong>，还能在浏览器里上传游戏！</p>
+<p>把 NES 红白机模拟器塞进一颗只有 <strong>400KB SRAM</strong> 的 ESP32-C3，能跑得动魂斗罗吗？答案是：能！本文带你从零复现这个项目。</p>
 
 <blockquote>
-<p>📦 项目地址：<a href="https://github.com/noahgeek/nofrendo-xiaomiao" target="_blank">github.com/noahgeek/nofrendo-xiaomiao</a></p>
+<p>📦 项目地址：<a href="https://github.com/noahgeek/esp32-nofrendo" target="_blank">github.com/noahgeek/esp32-nofrendo</a></p>
 </blockquote>
 
-<p><img src="/images/ESP32小喵掌机NES模拟器.jpg" alt="ESP32小喵掌机NES模拟器运行效果" style="max-width:100%"></p>
-
 <h2>🎯 项目简介</h2>
-<p>本项目基于 <a href="https://github.com/moononournation/arduino-nofrendo" target="_blank">arduino-nofrendo</a> 改造，适配学而思 ESP32 小喵掌机 <strong>ESP32 + ST7735 160×128</strong> 屏幕，围绕 SPI2 总线冲突修复、内存中转存档等关键技术难题，实现了完整的 NES 模拟体验。</p>
+<p>本项目基于 <a href="https://github.com/moononournation/arduino-nofrendo" target="_blank">arduino-nofrendo</a> 改造，针对 ESP32-C3 单片机进行了深度优化，让一颗成本不到 10 元的 MCU 也能流畅运行 NES 游戏。</p>
 
 <h3>✨ 核心特性</h3>
 <ul>
-<li>🖥️ <strong>ST7735 160×128</strong> 显示，NES 256×240 缩小适配全屏</li>
-<li>💾 <strong>SD 卡读取 ROM</strong>，从 <code>/rom/</code> 目录加载 <code>.nes</code> 文件，开机选档菜单</li>
-<li>📀 <strong>菜单式双槽位存档/读档</strong>，弹出菜单含存档时间，上下选槽位 A 确认</li>
-<li>📡 <strong>WiFi Web 文件管理</strong>，浏览器上传 ROM、下载存档、删除/改名文件</li>
-<li>🎮 <strong>掌机 6 键</strong> + 串口键盘备用控制</li>
-<li>🔊 <strong>蜂鸣器 PWM 音频</strong>（可开关）</li>
+<li>🖥️ <strong>ST7789 240×240</strong> 全屏显示，NES 256×240 自动裁剪适配</li>
+<li>🎮 <strong>PG-9193 蓝牙手柄</strong> 支持，通过 NimBLE 协议栈实现</li>
+<li>💾 <strong>mmap 零拷贝 ROM 加载</strong>，DRAM 占用为 0</li>
+<li>📀 <strong>存档/读档</strong> 功能，X/Y 键即可保存/恢复游戏状态</li>
+<li>🔌 <strong>串口键盘</strong> 备用控制（WSAD + JK）</li>
 </ul>
 
-<h2>🔧 硬件接线（小喵掌机）</h2>
+<h2>🔧 硬件接线</h2>
 <table>
-<thead><tr><th>TFT 引脚</th><th>ESP32 GPIO</th><th>说明</th></tr></thead>
+<thead><tr><th>TFT 引脚</th><th>ESP32-C3 GPIO</th><th>说明</th></tr></thead>
 <tbody>
 <tr><td>VCC</td><td>3V3</td><td>电源</td></tr>
 <tr><td>GND</td><td>GND</td><td>接地</td></tr>
-<tr><td>SCK</td><td>GPIO 18</td><td>SPI SCLK（与 SD 卡共享）</td></tr>
-<tr><td>SDA(MOSI)</td><td>GPIO 23</td><td>SPI MOSI（与 SD 卡共享）</td></tr>
-<tr><td>CS</td><td>GPIO 5</td><td>片选</td></tr>
-<tr><td>DC</td><td>GPIO 4</td><td>数据/命令</td></tr>
-<tr><td>RES</td><td>GPIO 19</td><td>与 SD 卡 MISO 共享</td></tr>
+<tr><td>SDA</td><td>GPIO 6</td><td>SPI MOSI</td></tr>
+<tr><td>SCK</td><td>GPIO 4</td><td>SPI SCLK</td></tr>
+<tr><td>DC</td><td>GPIO 1</td><td>数据/命令</td></tr>
+<tr><td>RES</td><td>GPIO 7</td><td>复位</td></tr>
 <tr><td>BLK</td><td>GPIO 5</td><td>背光</td></tr>
 </tbody>
 </table>
 
-<p>TFT 与 SD 卡共用 SPI2 总线（GPIO18/23/19），通过各自 CS 分时复用。</p>
-
 <h2>💡 技术亮点</h2>
 
-<h3>1. SPI2 总线冲突修复（关键）</h3>
-<p>TFT 与 SD 卡共享 SPI2 总线。旧版菜单式存读档崩溃由两层因素叠加导致：</p>
-<ol>
-<li><code>nofrendo_pause_timer()</code> 只停止定时器递增，但 <code>nes_emulate()</code> 主循环仍可能在帧需渲染时调 <code>vid_flush</code> 继续写屏（SPI2）；</li>
-<li><code>sdTask</code> 在同一窗口内操作 SD 卡（SPI2 DMA）→ 两条路径争抢 SPI2 → ESP32 Guru Meditation 崩溃。</li>
-</ol>
-<p><strong>修复方案</strong>：新增 <code>volatile bool g_emulation_suspended</code> 标志，pause 时置 true 跳过渲染循环，让 SPI2 空闲给 sdTask。</p>
+<h3>1. mmap 零拷贝：榨干 Flash 当 RAM 用</h3>
+<p>ESP32-C3 只有 400KB SRAM，但很多 NES 游戏 ROM 都超过 256KB（比如恶魔城）。常规做法是把 ROM 读到 RAM 里，但 RAM 根本不够用。解决方案：</p>
+<pre><code>// 把 SPIFFS 分区直接映射到 CPU 地址空间
+const esp_partition_t *part = esp_partition_find_first(
+    ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
+esp_partition_mmap(part, 0, part-&gt;size, ESP_PARTITION_MMAP_DATA, &amp;rom_ptr, &amp;handle);
+// 现在 rom_ptr 像普通指针一样可以读取！</code></pre>
+<p>CPU/PPU 访问 ROM 就像访问内存一样，<strong>DRAM 占用为 0</strong>，经测试，可以跑337KB以内的任意 ROM。</p>
 
-<h3>2. 内存中转存档：零竞态条件</h3>
-<p>NES 状态保存/恢复在定时器回调内<strong>同步</strong>完成（纯内存操作，约 31KB blob），SD 卡写入在独立任务中<strong>异步</strong>完成。操作 SD 卡前通过 <code>g_emulation_suspended</code> 挂起 <code>nes_emulate()</code>，确保 displayTask 不再争抢 SPI2。</p>
+<h3>2. NimBLE 替代 Bluedroid：省下 80KB RAM</h3>
+<p>ESP32 默认的 Bluedroid 蓝牙协议栈大约占 110KB RAM，对 C3 来说太奢侈了。换成 NimBLE 只占 30KB，把省下的 80KB 留给 NES 模拟器。</p>
 
-<h3>3. 双槽位存档（取代 .bak 备份）</h3>
-<p>采用 <code>sa1</code> / <code>sa2</code> 两个独立槽位，存档菜单显示各自时间戳（<code>YYYY-MM-DD HH:MM</code>），由 SNTP 同步后格式化。历史保护由双槽位本身提供，不再需要额外的备份文件。</p>
+<h3>3. 后台 BLE 任务 + 暂停游戏定时器</h3>
+<p>蓝牙连接是耗时操作，会抢 CPU 时间导致游戏卡顿。解决方法：</p>
+<ul>
+<li>BLE 扫描/连接放到独立 FreeRTOS 任务中</li>
+<li>BLE 初始化期间暂停 NES 帧定时器，避免竞争</li>
+<li>连接成功后恢复，玩家几乎感觉不到</li>
+</ul>
 
-<h3>4. GPIO19 复用</h3>
-<p>GPIO19 同时是 TFT RES 和 SD MISO。解决方案：TFT 使用软件复位命令（RST = -1），不占用 GPIO19；GFX bus 的 MISO 设为 19；<code>display_begin()</code> 后再调一次 <code>sdSpi.begin()</code> 确保 SPI 路由正确。</p>
-
-<h3>5. WiFi 内存管理</h3>
-<p>WiFi 仅在选档菜单期间运行，进入 NES 模拟器前停止 Web 服务器并释放内存，避免 WiFi 占用过多 RAM 导致游戏崩溃。进游戏后 WiFi 进入省电模式减少后台中断对 SD 卡 SPI 的干扰。</p>
+<h3>4. 存档存在 coredump 分区</h3>
+<p>ESP32 默认有个 64KB 的 coredump 分区用来存崩溃信息，这里被我"借用"来存游戏存档：2 个槽位，按 X 存档、按 Y 读档。</p>
 
 <h2>🎮 按键映射</h2>
 <table>
-<thead><tr><th>掌机按键</th><th>NES 功能</th></tr></thead>
+<thead><tr><th>PG-9193 手柄</th><th>NES 功能</th></tr></thead>
 <tbody>
 <tr><td>方向键</td><td>方向键</td></tr>
-<tr><td>A (GPIO34)</td><td>A 键</td></tr>
-<tr><td>B (GPIO12)</td><td>B 键</td></tr>
-<tr><td>上+下+B</td><td>SELECT</td></tr>
-<tr><td>上+下+A</td><td>START</td></tr>
-<tr><td><strong>左+右+B</strong></td><td>💾 弹出存档菜单（2 槽位）</td></tr>
-<tr><td><strong>左+右+A</strong></td><td>📂 弹出读档菜单（2 槽位）</td></tr>
-<tr><td>左+上+右+A</td><td>🔊 蜂鸣器开关</td></tr>
+<tr><td>A / B</td><td>A / B</td></tr>
+<tr><td>SELECT / START</td><td>SELECT / START</td></tr>
+<tr><td>X</td><td>💾 存档</td></tr>
+<tr><td>Y</td><td>📂 读档</td></tr>
 </tbody>
 </table>
 
-<h2>📡 WiFi 文件管理</h2>
-<p>选档菜单期间，浏览器访问屏幕显示的 IP 地址即可：</p>
-<ul>
-<li>浏览 <code>/rom</code> 和 <code>/save</code> 目录</li>
-<li>上传 ROM 文件到 SD 卡</li>
-<li>下载存档文件（<code>.sa1</code> / <code>.sa2</code>）到电脑</li>
-<li>删除/改名文件</li>
-</ul>
-<p><img src="/images/小喵掌机WiFi文件管理.jpg" alt="小喵掌机WiFi文件管理" style="max-width:100%"></p>
-<p><img src="/images/小喵掌机WiFi文件管理界面.jpg" alt="小喵掌机WiFi文件管理界面" style="max-width:100%"></p>
-
 <h2>🚀 快速开始</h2>
 <ol>
-<li>SD 卡格式化为 FAT32，根目录建 <code>rom</code> 文件夹，放入 <code>.nes</code> ROM 文件</li>
-<li>Arduino IDE 安装 <code>Arduino_GFX</code> 库（<strong>不要</strong>装 nofrendo 库，项目自带源码）</li>
-<li>开发板选 <strong>ESP32 Dev Module</strong>，分区方案 <strong>Default 4MB with SPIFFS</strong>，PSRAM <strong>Enabled</strong></li>
-<li>ESP32 开发板库版本 <strong>2.0.9</strong>（其他版本可能无法点亮屏幕）</li>
-<li>编译烧录 → 上电 → 连接 WiFi → 浏览器上传 ROM → 选游戏开玩！</li>
+<li>Arduino IDE 安装 <code>Arduino_GFX</code> 和 <code>NimBLE-Arduino</code> 库</li>
+<li>开发板选 <strong>ESP32C3 Dev Module</strong>，分区方案选 <strong>Default 4MB with SPIFFS</strong></li>
+<li>编译烧录主程序到 ESP32-C3</li>
+<li>运行 <code>upload_spiffs.ps1 -Rom .\data\Chase.nes</code> 烧录 ROM</li>
+<li>上电！蓝牙手柄按 Home 键配对，自动连接</li>
 </ol>
 
 <h2>⚠️ 踩过的坑</h2>
 <ul>
-<li><strong>不要装 Arduino IDE 的 nofrendo 库</strong>：项目自带 <code>src/</code> 目录包含完整源码，重复会冲突</li>
-<li><strong>TFT 与 SD 卡共用 SPI2 总线</strong>：已通过 <code>g_emulation_suspended</code> 互斥机制修复，选档/存读档期间自动暂停 NES 渲染</li>
-<li><strong>WiFi 在游戏内不可用</strong>：非 bug，进游戏后停止 Web 服务器释放内存，按 B 退回选档菜单即可恢复</li>
-<li><strong>无 SD 卡也能玩</strong>：固件自动回退到 SPIFFS 分区 ROM（需先烧录）</li>
+<li><strong>不要装 Arduino IDE 的 nofrendo 库</strong>：项目自带 <code>src/</code> 目录已包含完整源码，重复会冲突</li>
+<li><strong>ESP32-C3 是单核</strong>：复杂场景会掉帧，关闭 BLE 可略微提升性能</li>
+<li><strong>音频已禁用</strong>：项目硬件没接 DAC/PWM 喇叭，留给后续扩展</li>
 </ul>
 
 <h2>📚 致谢</h2>
 <ul>
-<li><a href="https://github.com/moononournation/arduino-nofrendo" target="_blank">arduino-nofrendo</a> — 原始 NES 模拟器库</li>
+<li><a href="https://github.com/moononournation/arduino-nofrendo" target="_blank">arduino-nofrendo</a> — 原始项目</li>
+<li><a href="https://github.com/h2zero/NimBLE-Arduino" target="_blank">NimBLE-Arduino</a> — 轻量蓝牙协议栈</li>
 <li><a href="https://github.com/moononournation/Arduino_GFX" target="_blank">Arduino_GFX</a> — TFT 屏幕驱动库</li>
-<li><a href="https://github.com/pysn2012/xueersi-xiaomiao" target="_blank">学而思小喵掌机</a> — 硬件参考</li>
 </ul>
 
 <p>欢迎到 GitHub 给项目点个 ⭐！有问题或者改进建议都可以提 Issue～</p>
