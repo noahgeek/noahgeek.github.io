@@ -185,6 +185,50 @@
   font-size: 0.95em;
 }
 
+/* --- Post Preview (no image, text only) --- */
+.post-preview-noimg {
+  padding: 16px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.post-preview-noimg:last-child {
+  border-bottom: none;
+}
+
+.post-preview-noimg .post-header {
+  margin-bottom: 4px;
+}
+
+.post-preview-noimg .post-title {
+  margin: 0;
+  font-size: 1.15em;
+}
+
+.post-preview-noimg .post-meta {
+  font-size: 0.82em;
+  color: #999;
+  margin-top: 2px;
+}
+
+.post-preview-noimg .post-meta-item {
+  margin-right: 16px;
+}
+
+.post-preview-noimg .post-meta-item i {
+  margin-right: 4px;
+}
+
+.post-preview-noimg .post-body {
+  margin-top: 6px;
+}
+
+.post-preview-noimg .post-body p {
+  margin: 0;
+  line-height: 1.6;
+  color: #666;
+  font-size: 0.9em;
+}
+
 .read-more {
   margin-top: 10px !important;
 }
