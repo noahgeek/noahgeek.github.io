@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/custom.css">
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="🎮 ESP32 小喵掌机 NES 模拟器：SD卡版 + WiFi文件管理">
+<meta property="og:url" content="https://d1ai.cn/2026/07/18/nofrendo-xiaomiao/index.html">
+<meta property="og:site_name" content="Noahgeek">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-07-18T08:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-18T08:00:00.000Z">
+<meta property="article:author" content="NoahGeek">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://d1ai.cn/2026/07/18/nofrendo-xiaomiao/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>🎮 ESP32 小喵掌机 NES 模拟器：SD卡版 + WiFi文件管理 | Noahgeek</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Noahgeek</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://d1ai.cn/2026/07/18/nofrendo-xiaomiao/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="NoahGeek">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Noahgeek">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          🎮 ESP32 小喵掌机 NES 模拟器：SD卡版 + WiFi文件管理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-07-18 16:00:00" itemprop="dateCreated datePublished" datetime="2026-07-18T16:00:00+08:00">2026-07-18</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+<p>把小喵掌机（学而思 ESP32 编程掌机）改造成 <strong>NES 红白机模拟器</strong>，支持 <strong>SD 卡读取 ROM</strong>、<strong>WiFi Web 文件管理</strong>、<strong>菜单式双槽位存档/读档</strong>，还能在浏览器里上传游戏！</p>
+
+<blockquote>
+<p>📦 项目地址：<a href="https://github.com/noahgeek/nofrendo-xiaomiao" target="_blank">github.com/noahgeek/nofrendo-xiaomiao</a></p>
+</blockquote>
+
+<p><img src="/images/ESP32小喵掌机NES模拟器.jpg" alt="ESP32小喵掌机NES模拟器运行效果" style="max-width:100%"></p>
+
+<h2>🎯 项目简介</h2>
+<p>本项目基于 <a href="https://github.com/moononournation/arduino-nofrendo" target="_blank">arduino-nofrendo</a> 改造，适配学而思 ESP32 小喵掌机 <strong>ESP32 + ST7735 160×128</strong> 屏幕，围绕 SPI2 总线冲突修复、内存中转存档等关键技术难题，实现了完整的 NES 模拟体验。</p>
+
+<h3>✨ 核心特性</h3>
+<ul>
+<li>🖥️ <strong>ST7735 160×128</strong> 显示，NES 256×240 缩小适配全屏</li>
+<li>💾 <strong>SD 卡读取 ROM</strong>，从 <code>/rom/</code> 目录加载 <code>.nes</code> 文件，开机选档菜单</li>
+<li>📀 <strong>菜单式双槽位存档/读档</strong>，弹出菜单含存档时间，上下选槽位 A 确认</li>
+<li>📡 <strong>WiFi Web 文件管理</strong>，浏览器上传 ROM、下载存档、删除/改名文件</li>
+<li>🎮 <strong>掌机 6 键</strong> + 串口键盘备用控制</li>
+<li>🔊 <strong>蜂鸣器 PWM 音频</strong>（可开关）</li>
+</ul>
+
+<h2>🔧 硬件接线（小喵掌机）</h2>
+<table>
+<thead><tr><th>TFT 引脚</th><th>ESP32 GPIO</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>VCC</td><td>3V3</td><td>电源</td></tr>
+<tr><td>GND</td><td>GND</td><td>接地</td></tr>
+<tr><td>SCK</td><td>GPIO 18</td><td>SPI SCLK（与 SD 卡共享）</td></tr>
+<tr><td>SDA(MOSI)</td><td>GPIO 23</td><td>SPI MOSI（与 SD 卡共享）</td></tr>
+<tr><td>CS</td><td>GPIO 5</td><td>片选</td></tr>
+<tr><td>DC</td><td>GPIO 4</td><td>数据/命令</td></tr>
+<tr><td>RES</td><td>GPIO 19</td><td>与 SD 卡 MISO 共享</td></tr>
+<tr><td>BLK</td><td>GPIO 5</td><td>背光</td></tr>
+</tbody>
+</table>
+<p>TFT 与 SD 卡共用 SPI2 总线（GPIO18/23/19），通过各自 CS 分时复用。</p>
+
+<h2>💡 技术亮点</h2>
+
+<h3>1. SPI2 总线冲突修复（关键）</h3>
+<p>TFT 与 SD 卡共享 SPI2 总线。旧版菜单式存读档崩溃由两层因素叠加导致：</p>
+<ol>
+<li><code>nofrendo_pause_timer()</code> 只停止定时器递增，但 <code>nes_emulate()</code> 主循环仍可能在帧需渲染时调 <code>vid_flush</code> 继续写屏（SPI2）；</li>
+<li><code>sdTask</code> 在同一窗口内操作 SD 卡（SPI2 DMA）→ 两条路径争抢 SPI2 → ESP32 Guru Meditation 崩溃。</li>
+</ol>
+<p><strong>修复方案</strong>：新增 <code>volatile bool g_emulation_suspended</code> 标志，pause 时置 true 跳过渲染循环，让 SPI2 空闲给 sdTask。</p>
+
+<h3>2. 内存中转存档：零竞态条件</h3>
+<p>NES 状态保存/恢复在定时器回调内<strong>同步</strong>完成（纯内存操作，约 31KB blob），SD 卡写入在独立任务中<strong>异步</strong>完成。操作 SD 卡前通过 <code>g_emulation_suspended</code> 挂起 <code>nes_emulate()</code>，确保 displayTask 不再争抢 SPI2。</p>
+
+<h3>3. 双槽位存档（取代 .bak 备份）</h3>
+<p>采用 <code>sa1</code> / <code>sa2</code> 两个独立槽位，存档菜单显示各自时间戳（<code>YYYY-MM-DD HH:MM</code>），由 SNTP 同步后格式化。历史保护由双槽位本身提供，不再需要额外的备份文件。</p>
+
+<h3>4. GPIO19 复用</h3>
+<p>GPIO19 同时是 TFT RES 和 SD MISO。解决方案：TFT 使用软件复位命令（RST = -1），不占用 GPIO19；GFX bus 的 MISO 设为 19；<code>display_begin()</code> 后再调一次 <code>sdSpi.begin()</code> 确保 SPI 路由正确。</p>
+
+<h3>5. WiFi 内存管理</h3>
+<p>WiFi 仅在选档菜单期间运行，进入 NES 模拟器前停止 Web 服务器并释放内存，避免 WiFi 占用过多 RAM 导致游戏崩溃。进游戏后 WiFi 进入省电模式减少后台中断对 SD 卡 SPI 的干扰。</p>
+
+<h2>🎮 按键映射</h2>
+<table>
+<thead><tr><th>掌机按键</th><th>NES 功能</th></tr></thead>
+<tbody>
+<tr><td>方向键</td><td>方向键</td></tr>
+<tr><td>A (GPIO34)</td><td>A 键</td></tr>
+<tr><td>B (GPIO12)</td><td>B 键</td></tr>
+<tr><td>上+下+B</td><td>SELECT</td></tr>
+<tr><td>上+下+A</td><td>START</td></tr>
+<tr><td><strong>左+右+B</strong></td><td>💾 弹出存档菜单（2 槽位）</td></tr>
+<tr><td><strong>左+右+A</strong></td><td>📂 弹出读档菜单（2 槽位）</td></tr>
+<tr><td>左+上+右+A</td><td>🔊 蜂鸣器开关</td></tr>
+</tbody>
+</table>
+
+<h2>📡 WiFi 文件管理</h2>
+<p>选档菜单期间，浏览器访问屏幕显示的 IP 地址即可：</p>
+<ul>
+<li>浏览 <code>/rom</code> 和 <code>/save</code> 目录</li>
+<li>上传 ROM 文件到 SD 卡</li>
+<li>下载存档文件（<code>.sa1</code> / <code>.sa2</code>）到电脑</li>
+<li>删除/改名文件</li>
+</ul>
+<p><img src="/images/小喵掌机WiFi文件管理.jpg" alt="小喵掌机WiFi文件管理" style="max-width:100%"></p>
+<p><img src="/images/小喵掌机WiFi文件管理界面.jpg" alt="小喵掌机WiFi文件管理界面" style="max-width:100%"></p>
+
+<h2>🚀 快速开始</h2>
+<ol>
+<li>SD 卡格式化为 FAT32，根目录建 <code>rom</code> 文件夹，放入 <code>.nes</code> ROM 文件</li>
+<li>Arduino IDE 安装 <code>Arduino_GFX</code> 库（<strong>不要</strong>装 nofrendo 库，项目自带源码）</li>
+<li>开发板选 <strong>ESP32 Dev Module</strong>，分区方案 <strong>Default 4MB with SPIFFS</strong>，PSRAM <strong>Enabled</strong></li>
+<li>ESP32 开发板库版本 <strong>2.0.9</strong>（其他版本可能无法点亮屏幕）</li>
+<li>编译烧录 → 上电 → 连接 WiFi → 浏览器上传 ROM → 选游戏开玩！</li>
+</ol>
+
+<h2>⚠️ 踩过的坑</h2>
+<ul>
+<li><strong>不要装 Arduino IDE 的 nofrendo 库</strong>：项目自带 <code>src/</code> 目录包含完整源码，重复会冲突</li>
+<li><strong>TFT 与 SD 卡共用 SPI2 总线</strong>：已通过 <code>g_emulation_suspended</code> 互斥机制修复，选档/存读档期间自动暂停 NES 渲染</li>
+<li><strong>WiFi 在游戏内不可用</strong>：非 bug，进游戏后停止 Web 服务器释放内存，按 B 退回选档菜单即可恢复</li>
+<li><strong>无 SD 卡也能玩</strong>：固件自动回退到 SPIFFS 分区 ROM（需先烧录）</li>
+</ul>
+
+<h2>📚 致谢</h2>
+<ul>
+<li><a href="https://github.com/moononournation/arduino-nofrendo" target="_blank">arduino-nofrendo</a> — 原始 NES 模拟器库</li>
+<li><a href="https://github.com/moononournation/Arduino_GFX" target="_blank">Arduino_GFX</a> — TFT 屏幕驱动库</li>
+<li><a href="https://github.com/pysn2012/xueersi-xiaomiao" target="_blank">学而思小喵掌机</a> — 硬件参考</li>
+</ul>
+
+<p>欢迎到 GitHub 给项目点个 ⭐！有问题或者改进建议都可以提 Issue～</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">NoahGeek</p>
+  <div class="site-description" itemprop="description">嵌入式开发 / 单片机 / 折腾</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">NoahGeek</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
